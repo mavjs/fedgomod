@@ -1,0 +1,6 @@
+{
+    "go.testFlags": [
+        "-v",
+        "-mod=vendor",
+    ],
+}
