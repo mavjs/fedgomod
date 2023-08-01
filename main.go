@@ -43,7 +43,7 @@ func main() {
 		log.Fatalln("error while parsing go.mod file", err)
 	}
 
-	rpmGoVer := regexp.MustCompile(`^v\d`)
+	rpmGoVer := regexp.MustCompile(`-v\d-`)
 	rpmDenyStr := strings.NewReplacer(".", "-", "_", "-", "/", "-", "~", "-")
 
 	for _, dep := range parsedFile.Require {
@@ -63,13 +63,6 @@ func main() {
 
 			// prepend "golang" to list of go name
 			splitMod = append([]string{"golang"}, splitMod...)
-			lenModPath := len(splitMod)
-
-			lastPath := splitMod[lenModPath-1]
-			if ok := rpmGoVer.MatchString(lastPath); ok {
-				splitMod[lenModPath-1] = strings.TrimPrefix(lastPath, "v")
-			}
-
 			// append "devel" to list of go name
 			splitMod = append(splitMod, "devel")
 
@@ -85,6 +78,10 @@ func main() {
 			}
 			fedoraPackageName = strings.Join(results, "-")
 			fedoraPackageName = rpmDenyStr.Replace(fedoraPackageName)
+			// Remove "v" from any v2, vN type strings in the name
+			if ok := rpmGoVer.MatchString(fedoraPackageName); ok {
+				fedoraPackageName = strings.Replace(fedoraPackageName, "v", "", 1)
+			}
 
 			fmt.Println(dep.Mod.Path, "->", fedoraPackageName)
 		}
